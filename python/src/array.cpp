@@ -411,6 +411,38 @@ void init_array(nb::module_& m) {
           )pbdoc")
       .def("__getitem__", mlx_get_item, nb::arg().none())
       .def("__setitem__", mlx_set_item, nb::arg().none(), nb::arg())
+      .def(
+          "get",
+          mlx_get_item,
+          "indices"_a.none(),
+          R"pbdoc(
+            Get items from the array at the given indices.
+
+            This is the explicit-method equivalent of using ``x[indices]``.
+
+            Args:
+                indices: Index or slice specifier (e.g., int, tuple, slice, arrays, ...).
+
+            Returns:
+                array: The selected view or values.
+          )pbdoc")
+      .def(
+          "set",
+          mlx_set_item,
+          "indices"_a.none(),
+          "value"_a,
+          R"pbdoc(
+            Set items in the array at the given indices to ``value``.
+
+            This is the explicit-method equivalent of using ``x[indices] = value``.
+
+            Args:
+                indices: Index or slice specifier (e.g., int, tuple, slice, arrays, ...).
+                value: A scalar or array-like object to assign.
+
+            Returns:
+                None
+          )pbdoc")
       .def_prop_ro(
           "at",
           [](const mx::array& a) { return ArrayAt(a); },
