@@ -974,3 +974,38 @@ def clip_grad_norm(grads, max_norm):
     normalizer = mx.minimum(max_norm / (total_norm + 1e-6), 1.0)
     clipped_grads = tree_map(lambda g: g * normalizer, grads)
     return clipped_grads, total_norm
+
+
+class SophiaG(Optimizer):
+    r"""The Sophia-G optimizer using Gauss-Newton-Bartlett Hessian estimator.
+    
+    Paper: "Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training"
+    <https://arxiv.org/pdf/2305.14342>`_
+    
+    Sophia-G uses a light-weight estimate of the diagonal Hessian as a preconditioner,
+    achieving 2x speedup over Adam in language model pre-training.
+    
+    Updates follow:
+        m_{t+1} = β_1 * m_t + (1 - β_1) * g_t
+        h_{t+1} = β_2 * h_t + (1 - β_2) * ĥ_t  (every k steps)
+        θ_{t+1} = θ_t - η * λ * θ_t - η * clip(m_{t+1} / max(γ * h_{t+1}, ε), 1)
+    
+    The Gauss-Newton-Bartlett (GNB) estimator samples labels from the model's output
+    distribution and computes: B * ∇ℓ(f(θ,x), ŷ) ⊙ ∇ℓ(f(θ,x), ŷ)
+    
+    Args:
+        learning_rate (float or callable): The learning rate η.
+        betas (List[float], optional): The coefficients (β_1, β_2) for gradient
+            and Hessian moving averages. Default: [0.96, 0.99]
+        eps (float, optional): Small constant for numerical stability. Default: 1e-12
+        weight_decay (float, optional): Weight decay λ. Default: 0.1
+        gamma (float, optional): Clipping threshold γ. Default: 0.05
+        k (int, optional): Hessian update frequency. Default: 10
+    
+    Reference:
+        Liu, H., Li, Z., Hall, D., Liang, P., & Ma, T. (2023).
+        Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training.
+        arXiv preprint arXiv:2305.14342.
+    """
+    def __init__(self, schedulers=None):
+        super().__init__()
